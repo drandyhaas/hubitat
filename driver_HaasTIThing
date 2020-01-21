@@ -1,0 +1,140 @@
+
+metadata {
+	definition (name: "HaasTI ZigBee Switch", namespace: "drandyhaas", author: "Andy Haas", ocfDeviceType: "oic.d.switch", runLocally: true, minHubCoreVersion: '000.019.00012', executeCommandsLocally: true, genericHandler: "Zigbee") {
+		capability "Actuator"
+		capability "Configuration"
+		capability "Refresh"
+		capability "Switch"
+		capability "Health Check"
+        
+        command "gettext"
+        command "butt1"
+        command "allon"
+        command "on1"
+        command "on2"
+        command "on3"
+        command "on4"
+        command "butt2"
+        command "alloff"
+        command "off1"
+        command "off2"
+        command "off3"
+        command "off4"
+        command "getadc0"
+        command "getadc1"
+        command "getadc4"
+        command "getadc5"
+
+        command "sendtext1"
+
+        attribute "text","string"
+
+        fingerprint inClusters: "0000,0003,0004,0005,0006", outClusters: "0000", profileId: "0104", manufacturer: "TexasInstruments", model: "TI0001", deviceJoinName: "HaasTI Thing"
+	}
+}
+
+// Parse incoming device messages to generate events
+def parse(String description) {
+	//log.debug "description is $description"
+    Map map = [:]
+	def event = zigbee.getEvent(description)
+	if (event) {
+		sendEvent(event)
+	}
+    else if (description?.startsWith("catchall:")) {
+    	log.debug "catchall is $description"
+    }
+    else if (description?.startsWith("read attr -")) {
+		def descMap = zigbee.parseDescriptionAsMap(description)
+		log.debug "Desc Map: $descMap"
+		if (descMap.clusterInt == 0) {
+			
+            //def readstring = descMap.value
+            //byte[] asciireadstring = readstring.decodeHex()
+            //String text = new String(asciireadstring)
+            //log.debug "readstring is $readstring, ascii $asciireadstring, text $text"
+            
+            def text = descMap.value
+            log.debug "text is $text"
+            
+            if (text.startsWith("ping.")) return
+            return createEvent(name: "text", value: "$text")
+		}
+        else {
+			log.warn "Not an attribute we can decode"
+		}
+	} 
+	else {
+		log.warn "DID NOT PARSE MESSAGE for description : $description"
+		log.debug zigbee.parseDescriptionAsMap(description)
+	}
+}
+
+def off() {
+	zigbee.off()
+}
+
+def on() {
+	zigbee.on()
+}
+
+/**
+ * PING is used by Device-Watch in attempt to reach the Device
+ * */
+def ping() {
+	return refresh()
+}
+
+def refresh() {
+    log.info "refresh"
+	zigbee.onOffRefresh() + zigbee.onOffConfig()
+}
+
+def gettext(){ // read some attribute string from the device
+	log.info "gettext"
+    //zigbee.readAttribute(0x000, 0x0006) // gets the last thing the device tried to send to us
+    zigbee.readAttribute(0x000, 0x0010) // gets the last command the device heard us send
+}
+
+def sendtext1(){ // set the LocationDescription string on the device
+    log.debug "sendtext1"
+    //sendtodevice("ping") // to say hi
+    sendtodevice("arduino1") // to tell the arduino, connected on serial, to do something, like send back a message on serial (it should just make sure it's <16 bytes, and ends with a ".")
+}
+
+def allon(){sendtodevice("on")}
+def on1(){sendtodevice("on1")}
+def on2(){sendtodevice("on2")}
+def on3(){sendtodevice("on3")}
+def on4(){sendtodevice("on4")}
+def alloff(){sendtodevice("off")}
+def off1(){sendtodevice("off1")}
+def off2(){sendtodevice("off2")}
+def off3(){sendtodevice("off3")}
+def off4(){sendtodevice("off4")}
+def butt1(){sendtodevice("getbutt1")}
+def butt2(){sendtodevice("getbutt2")}
+def getadc0(){sendtodevice("getadc0")}
+def getadc1(){sendtodevice("getadc1")}
+def getadc4(){sendtodevice("getadc4")}
+def getadc5(){sendtodevice("getadc5")}
+
+def sendtodevice(String mystr){
+    //log.debug "mystr is $mystr"
+    mystr=mystr.padRight(16,".") // mystr should be 16 bytes!  
+    //log.debug "mystr is $mystr"
+    //mystr = mystr.reverse() // must reverse since little-endian(?)
+    //log.debug "mystr is $mystr"
+    def packed = hubitat.helper.HexUtils.byteArrayToHexString(mystr.getBytes())
+    log.info "sending $mystr, packed is $packed "
+    def commandtosend = "he wattr 0x${device.deviceNetworkId} 8 0x000 0x010 0x42 {10"+packed+"}" // SAMPLELIGHT_ENDPOINT is defined as 8 in device code // the 10 on the end means 16 bytes length
+    //log.debug "$commandtosend"
+    return commandtosend
+}
+
+def configure() {
+	// Device-Watch allows 2 check-in misses from device + ping (plus 2 min lag time)
+	sendEvent(name: "checkInterval", value: 2 * 10 * 60 + 2 * 60, displayed: false, data: [protocol: "zigbee", hubHardwareId: device.hub.hardwareID])
+	log.debug "Configuring Reporting and Bindings."
+	zigbee.onOffRefresh() + zigbee.onOffConfig()
+}
