@@ -263,14 +263,14 @@ def push(b){
     if (b=="11") return getadc1();
     if (b=="14") return getadc4();
     if (b=="15") return getadc5();
-    if (b=="21") return polladc0();
-    if (b=="22") return polladc1();
-    if (b=="23") return polladc4();
-    if (b=="24") return polladc5();
-    if (b=="25") return polladc0();
-    if (b=="26") return polladc1();
-    if (b=="27") return polladc4();
-    if (b=="28") return polladc5();
+    if (b=="30") return polladc0();
+    if (b=="31") return polladc1();
+    if (b=="34") return polladc4();
+    if (b=="35") return polladc5();
+    if (b=="40") return polladc0();
+    if (b=="41") return polladc1();
+    if (b=="44") return polladc4();
+    if (b=="45") return polladc5();
 }
 
 def sendtodevice(String mystr){
