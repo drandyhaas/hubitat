@@ -9,12 +9,13 @@ metadata {
         
         command "gettext"
         command "butt1"
+        command "butt2"
+        command "butt3"
         command "allon"
         command "on1"
         command "on2"
         command "on3"
         command "on4"
-        command "butt2"
         command "alloff"
         command "off1"
         command "off2"
@@ -24,10 +25,32 @@ metadata {
         command "getadc1"
         command "getadc4"
         command "getadc5"
+        command "polladc0"
+        command "polladc1"
+        command "polladc4"
+        command "polladc5"
+        command "nopolladc0"
+        command "nopolladc1"
+        command "nopolladc4"
+        command "nopolladc5"
+        
+        command "push"
 
         command "sendtext1"
 
         attribute "text","string"
+        
+        attribute "adc0","number"
+        attribute "adc1","number"
+        attribute "adc4","number"
+        attribute "adc5","number"
+        attribute "digin1","text"
+        attribute "digin2","text"
+        attribute "digin3","text"        
+        attribute "digout1","text"        
+        attribute "digout2","text"        
+        attribute "digout3","text"        
+        attribute "digout4","text"        
 
         fingerprint inClusters: "0000,0003,0004,0005,0006", outClusters: "0000", profileId: "0104", manufacturer: "TexasInstruments", model: "TI0001", deviceJoinName: "HaasTI Thing"
 	}
@@ -58,6 +81,87 @@ def parse(String description) {
             log.debug "text is $text"
             
             if (text.startsWith("ping.")) return
+            if (text.startsWith("0_")){
+                log.debug "adc 0 parse"
+                val = text.substring(2,text.indexOf("."))
+                sendEvent(name: "adc0", value: val)
+            }
+            if (text.startsWith("1_")){
+                log.debug "adc 1 parse"
+                val = text.substring(2,text.indexOf("."))
+                sendEvent(name: "adc1", value: val)
+            }
+            if (text.startsWith("4_")){
+                log.debug "adc 4 parse"
+                val = text.substring(2,text.indexOf("."))
+                sendEvent(name: "adc4", value: val)
+            }
+            if (text.startsWith("5_")){
+                log.debug "adc 5 parse"
+                val = text.substring(2,text.indexOf("."))
+                sendEvent(name: "adc5", value: val)
+            }
+            if (text.startsWith("Button1 ")){
+                log.debug "butt1 parse"
+                val = text.substring(8,text.indexOf("."))
+                sendEvent(name: "digin1", value: val)
+            }
+            if (text.startsWith("Button2 ")){
+                log.debug "butt2 parse"
+                val = text.substring(8,text.indexOf("."))
+                sendEvent(name: "digin2", value: val)
+            }
+            if (text.startsWith("Button3 ")){
+                log.debug "butt3 parse"
+                val = text.substring(8,text.indexOf("."))
+                sendEvent(name: "digin3", value: val)
+            }
+            if (text.startsWith("on...")){
+                log.debug "on parse"
+                sendEvent(name: "digout1", value: "on")
+                sendEvent(name: "digout2", value: "on")
+                sendEvent(name: "digout3", value: "on")
+                sendEvent(name: "digout4", value: "on")
+            }
+            if (text.startsWith("off...")){
+                log.debug "off parse"
+                sendEvent(name: "digout1", value: "off")
+                sendEvent(name: "digout2", value: "off")
+                sendEvent(name: "digout3", value: "off")
+                sendEvent(name: "digout4", value: "off")
+            }
+            if (text.startsWith("on1...")){
+                log.debug "on1 parse"
+                sendEvent(name: "digout1", value: "on")
+            }
+            if (text.startsWith("on2...")){
+                log.debug "on2 parse"
+                sendEvent(name: "digout2", value: "on")
+            }
+            if (text.startsWith("on3...")){
+                log.debug "on3 parse"
+                sendEvent(name: "digout3", value: "on")
+            }
+            if (text.startsWith("on4...")){
+                log.debug "on4 parse"
+                sendEvent(name: "digout4", value: "on")
+            }
+            if (text.startsWith("off1...")){
+                log.debug "off1 parse"
+                sendEvent(name: "digout1", value: "off")
+            }
+            if (text.startsWith("off2...")){
+                log.debug "off2 parse"
+                sendEvent(name: "digout2", value: "off")
+            }
+            if (text.startsWith("off3...")){
+                log.debug "off3 parse"
+                sendEvent(name: "digout3", value: "off")
+            }
+            if (text.startsWith("off4...")){
+                log.debug "off4 parse"
+                sendEvent(name: "digout4", value: "off")
+            }
             return createEvent(name: "text", value: "$text")
 		}
         else {
@@ -72,10 +176,18 @@ def parse(String description) {
 
 def off() {
 	zigbee.off()
+    sendEvent(name: "digout1", value: "off")
+    sendEvent(name: "digout2", value: "off")
+    sendEvent(name: "digout3", value: "off")
+    sendEvent(name: "digout4", value: "off")
 }
 
 def on() {
 	zigbee.on()
+    sendEvent(name: "digout1", value: "on")
+    sendEvent(name: "digout2", value: "on")
+    sendEvent(name: "digout3", value: "on")
+    sendEvent(name: "digout4", value: "on")
 }
 
 /**
@@ -114,10 +226,52 @@ def off3(){sendtodevice("off3")}
 def off4(){sendtodevice("off4")}
 def butt1(){sendtodevice("getbutt1")}
 def butt2(){sendtodevice("getbutt2")}
+def butt3(){sendtodevice("getbutt3")}
 def getadc0(){sendtodevice("getadc0")}
 def getadc1(){sendtodevice("getadc1")}
 def getadc4(){sendtodevice("getadc4")}
 def getadc5(){sendtodevice("getadc5")}
+def polladc0(){sendtodevice("polladc0")}
+def polladc1(){sendtodevice("polladc1")}
+def polladc4(){sendtodevice("polladc4")}
+def polladc5(){sendtodevice("polladc5")}
+def nopolladc0(){sendtodevice("nopolladc0")}
+def nopolladc1(){sendtodevice("nopolladc1")}
+def nopolladc4(){sendtodevice("nopolladc4")}
+def nopolladc5(){sendtodevice("nopolladc5")}
+
+def push(b){
+    log.debug "got button $b "
+    if (b=="1") {
+        if (device.currentValue("digout1")=="on") return off1();
+        if (device.currentValue("digout1")=="off") return on1();
+    }
+    if (b=="2") {
+        if (device.currentValue("digout2")=="on") return off2();
+        if (device.currentValue("digout2")=="off") return on2();
+    }
+    if (b=="3") {
+        if (device.currentValue("digout3")=="on") return off3();
+        if (device.currentValue("digout3")=="off") return on3();
+    }
+    if (b=="4") {
+        if (device.currentValue("digout4")=="on") return off4();
+        if (device.currentValue("digout4")=="off") return on4();
+    }
+    
+    if (b=="10") return getadc0();
+    if (b=="11") return getadc1();
+    if (b=="14") return getadc4();
+    if (b=="15") return getadc5();
+    if (b=="21") return polladc0();
+    if (b=="22") return polladc1();
+    if (b=="23") return polladc4();
+    if (b=="24") return polladc5();
+    if (b=="25") return polladc0();
+    if (b=="26") return polladc1();
+    if (b=="27") return polladc4();
+    if (b=="28") return polladc5();
+}
 
 def sendtodevice(String mystr){
     //log.debug "mystr is $mystr"
