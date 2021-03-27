@@ -175,19 +175,21 @@ def parse(String description) {
 }
 
 def off() {
-	zigbee.off()
+    log.info "off"
     sendEvent(name: "digout1", value: "off")
     sendEvent(name: "digout2", value: "off")
     sendEvent(name: "digout3", value: "off")
     sendEvent(name: "digout4", value: "off")
+    zigbee.off()
 }
 
 def on() {
-	zigbee.on()
+    log.info "on"
     sendEvent(name: "digout1", value: "on")
     sendEvent(name: "digout2", value: "on")
     sendEvent(name: "digout3", value: "on")
     sendEvent(name: "digout4", value: "on")
+    zigbee.on()
 }
 
 /**
