@@ -6,6 +6,7 @@ metadata {
 		capability "Refresh"
 		capability "Switch"
 		capability "Health Check"
+        capability "Temperature Measurement"
         
         command "gettext"
         command "butt1"
@@ -44,6 +45,7 @@ metadata {
         attribute "adc1","number"
         attribute "adc4","number"
         attribute "adc5","number"
+        attribute "vcc","number"
         attribute "digin1","text"
         attribute "digin2","text"
         attribute "digin3","text"        
@@ -100,6 +102,23 @@ def parse(String description) {
                 log.debug "adc 5 parse"
                 val = text.substring(2,text.indexOf("."))
                 sendEvent(name: "adc5", value: val)
+            }            
+            if (text.startsWith("3_")){ // VCC
+                log.debug "vcc3 parse"
+                val = text.substring(2,text.indexOf("."))
+                valf = val.toInteger() 
+                valf = valf*2.6/6140.0;
+                valf=valf.toFloat().round(2);
+                sendEvent(name: "vcc", value: valf)
+            }
+            if (text.startsWith("t_")){ // temp
+                log.debug "temp parse"
+                val = text.substring(2,text.indexOf("."))
+                valf = val.toInteger() 
+                valf = 25.0 + (valf-5920)/18.0;
+                valf = (valf*1.8)+32.0; // to F
+                valf=valf.toFloat().round(1);
+                sendEvent(name: "temperature ", value: valf)
             }
             if (text.startsWith("Button1 ")){
                 log.debug "butt1 parse"
