@@ -2,10 +2,11 @@
 metadata {
 	definition (name: "HaasTI ZigBee Switch", namespace: "drandyhaas", author: "Andy Haas", ocfDeviceType: "oic.d.switch", runLocally: true, minHubCoreVersion: '000.019.00012', executeCommandsLocally: true, genericHandler: "Zigbee") {
 		capability "Actuator"
-		capability "Configuration"
+        capability "Configuration"
 		capability "Refresh"
 		capability "Switch"
-		capability "Health Check"
+        capability "Sensor"
+        capability "Health Check"
         capability "Temperature Measurement"
         
         command "gettext"
@@ -118,7 +119,8 @@ def parse(String description) {
                 valf = 25.0 + (valf-5920)/18.0;
                 valf = (valf*1.8)+32.0; // to F
                 valf=valf.toFloat().round(1);
-                sendEvent(name: "temperature ", value: valf)
+                sendEvent(name: "temperature", value: valf)
+                log.debug "temp parse done $valf"
             }
             if (text.startsWith("Button1 ")){
                 log.debug "butt1 parse"
