@@ -7,6 +7,7 @@ metadata {
         capability "Switch"
         capability "Sensor"
         capability "Health Check"
+        capability "Battery"
         capability "Temperature Measurement"
         
         command "sendCommand", ["string"] //allows arbitrary command to be sent
@@ -116,6 +117,10 @@ def parse(String description) {
                 valf = valf*2.6/6140.0;
                 valf=valf.toFloat().round(2);
                 sendEvent(name: "vcc", value: valf)
+                bat=100.0
+                if (valf<3.0) bat=(valf-2.0)*100
+                if (valf<2.0) bat=0.0
+                sendEvent(name: "battery", value: bat)
             }
             if (text.startsWith("t_")){ // temp
                 log.debug "temp parse"
