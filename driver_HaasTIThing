@@ -45,6 +45,8 @@ metadata {
 
         attribute "text","string"
         
+        attribute "ntctemp","number"
+        
         attribute "adc0","number"
         attribute "adc1","number"
         attribute "adc4","number"
@@ -94,6 +96,7 @@ def parse(String description) {
                 log.debug "adc 0 parse"
                 val = text.substring(2,text.indexOf("."))
                 sendEvent(name: "adc0", value: val)
+                sendEvent(name: "ntctemp", value: convertNTC(val.toFloat()))
             }
             if (text.startsWith("1_")){
                 log.debug "adc 1 parse"
@@ -113,12 +116,12 @@ def parse(String description) {
             if (text.startsWith("3_")){ // VCC
                 log.debug "vcc3 parse"
                 val = text.substring(2,text.indexOf("."))
-                valf = val.toInteger() 
-                valf = valf*2.6/6140.0;
-                valf=valf.toFloat().round(2);
+                val = val.toInteger() 
+                float valf = val*2.6/6140.0;
+                valf=valf.round(2);
                 sendEvent(name: "vcc", value: valf)
-                bat=100.0
-                if (valf<3.0) bat=(valf-2.0)*100
+                float bat=100.0
+                if (valf<3.0) bat=(valf-2.0)*100.0
                 if (valf<2.0) bat=0.0
                 sendEvent(name: "battery", value: bat.round(2))
             }
@@ -329,4 +332,24 @@ def configure() {
 	sendEvent(name: "checkInterval", value: 2 * 10 * 60 + 2 * 60, displayed: false, data: [protocol: "zigbee", hubHardwareId: device.hub.hardwareID])
 	log.debug "Configuring Reporting and Bindings."
 	zigbee.onOffRefresh() + zigbee.onOffConfig()
+}
+
+def convertNTC(float average){ // https://learn.adafruit.com/thermistor/using-a-thermistor
+    float THERMISTORNOMINAL = 10000 // resistance at 25 degrees C
+    float TEMPERATURENOMINAL = 25 // temp. for nominal resistance (almost always 25 C)
+    float BCOEFFICIENT = 3950 // The beta coefficient of the thermistor (usually 3000-4000)
+    float SERIESRESISTOR = 10000 // the value of the 'other' resistor
+    float maxreading = 8191 // the max adc reading
+    
+    // convert the value to resistance
+    average = maxreading / average - 1;
+    average = SERIESRESISTOR / average;  
+    float steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
+    steinhart = Math.log(steinhart);                  // ln(R/Ro)
+    steinhart /= BCOEFFICIENT;                   // 1/B * ln(R/Ro)
+    steinhart += 1.0 / (TEMPERATURENOMINAL + 273.15); // + (1/To)
+    steinhart = 1.0 / steinhart;                 // Invert
+    steinhart -= 273.15;                         // convert absolute temp to C
+    steinhart = (steinhart*1.8) + 32;
+    return steinhart
 }
