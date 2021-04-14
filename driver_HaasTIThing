@@ -39,6 +39,10 @@ metadata {
         command "nopolladc4"
         command "nopolladc5"
         
+        //for battery powered MonaLisa
+        command "pwrwait", ["string"]
+        command "getpwrwait"
+        
         command "push"
 
         command "sendtext1"
@@ -51,6 +55,7 @@ metadata {
         attribute "adc1","number"
         attribute "adc4","number"
         attribute "adc5","number"
+        attribute "pwrwait","number"
         attribute "vcc","number"
         attribute "digin1","text"
         attribute "digin2","text"
@@ -96,6 +101,8 @@ def parse(String description) {
                 log.debug "adc 0 parse"
                 val = text.substring(2,text.indexOf("."))
                 sendEvent(name: "adc0", value: val)
+                
+                // if you have a ntc3950 thermistor between adc0 and GND (or digout), and a 10k resistor between adc0 and vcc
                 sendEvent(name: "ntctemp", value: convertNTC(val.toFloat()))
             }
             if (text.startsWith("1_")){
@@ -112,7 +119,12 @@ def parse(String description) {
                 log.debug "adc 5 parse"
                 val = text.substring(2,text.indexOf("."))
                 sendEvent(name: "adc5", value: val)
-            }            
+            }  
+            if (text.startsWith("pwrwait_")){
+                log.debug "pwrwait parse"
+                val = text.substring(8,text.indexOf("."))
+                sendEvent(name: "pwrwait", value: val)
+            }
             if (text.startsWith("3_")){ // VCC
                 log.debug "vcc3 parse"
                 val = text.substring(2,text.indexOf("."))
@@ -253,6 +265,15 @@ def sendtext1(){ // set the LocationDescription string on the device
 def sendCommand(String msg) {
     log.info "sendCommand - ${msg}"
     sendtodevice(msg)
+}
+
+def pwrwait(String msg) {
+    log.info "pwrwait_${msg}"
+    sendtodevice("pwrwait_"+msg)
+}
+def getpwrwait() {
+    log.info "getpwrwait"
+    sendtodevice("getpwrwait")
 }
 
 def allon(){sendtodevice("on")}
